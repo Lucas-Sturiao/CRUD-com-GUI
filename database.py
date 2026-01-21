@@ -32,6 +32,15 @@ class Database:
         cursor.execute("DELETE FROM produtos WHERE id = ?", (id_item,))
         self.conn.commit()
 
+    def atualizar(self, id_item, nome, qtd, preco):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            UPDATE produtos 
+            SET nome = ?, quantidade = ?, preco = ? 
+            WHERE id = ?
+        """, (nome, qtd, preco, id_item))
+        self.conn.commit()
+
     def limpar_tudo(self):
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM produtos")

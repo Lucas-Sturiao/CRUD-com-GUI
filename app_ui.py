@@ -5,6 +5,8 @@ class AppUI(ctk.CTk):
     def __init__(self, db):
         super().__init__()
         self.db = db # Recebe a conexão com o banco
+
+        self.id_em_edicao = None # Guarda o ID do item que está sendo editado
         
         self.title("Sistema de Inventário Profissional")
         self.geometry("900x600")
@@ -46,17 +48,33 @@ class AppUI(ctk.CTk):
         self.scrollable_frame = ctk.CTkScrollableFrame(self.main_frame, label_text="Produtos Cadastrados")
         self.scrollable_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
+    def preparar_edicao(self, item):
+        self.id_em_edicao = item[0]
+        self.entry_nome.delete(0, 'end')
+        self.entry_nome.insert(0, item[1])
+        self.entry_qtd.delete(0, 'end')
+        self.entry_qtd.insert(0, item[2])
+        self.entry_preco.delete(0, 'end')
+        self.entry_preco.insert(0, item[3])
+        self.btn_add.configure(text="Salvar Alterações", fg_color="#2ecc71")
+
     def adicionar(self):
         try:
             nome = self.entry_nome.get()
             qtd = int(self.entry_qtd.get())
             preco = float(self.entry_preco.get())
             
-            self.db.inserir(nome, qtd, preco)
+            if self.id_em_edicao is None:
+                self.db.inserir(nome, qtd, preco)
+            else:
+                self.db.atualizar(self.id_em_edicao, nome, qtd, preco)
+                self.id_em_edicao = None 
+                self.btn_add.configure(text="Adicionar", fg_color=ctk.ThemeManager.theme["CTkButton"]["fg_color"])
+
             self.atualizar_lista()
             self.limpar_campos()
         except ValueError:
-            messagebox.showerror("Erro", "Verifique se Quantidade e Preço são números.")
+            messagebox.showerror("Erro", "Dados inválidos.")
 
     def atualizar_lista(self):
         for widget in self.scrollable_frame.winfo_children():
@@ -73,7 +91,8 @@ class AppUI(ctk.CTk):
         ctk.CTkLabel(frame, text=texto).pack(side="left", padx=10)
         
         ctk.CTkButton(frame, text="Excluir", width=60, fg_color="#e74c3c", command=lambda i=item[0]: self.deletar(i)).pack(side="right", padx=5)
-        
+        ctk.CTkButton(frame, text="Editar", width=50, fg_color="#3498db", command=lambda i=item: self.preparar_edicao(i)).pack(side="right", padx=5)
+
     def filtrar_lista(self, event=None):
         termo = self.entry_busca.get()
         
