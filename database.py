@@ -36,3 +36,9 @@ class Database:
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM produtos")
         self.conn.commit()
+
+    def buscar_produtos(self, termo):
+        cursor = self.conn.cursor()
+        # O % permite buscar qualquer texto antes ou depois do termo
+        cursor.execute("SELECT * FROM produtos WHERE nome LIKE ?", (f"%{termo}%",))
+        return cursor.fetchall()

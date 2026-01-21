@@ -38,6 +38,10 @@ class AppUI(ctk.CTk):
     def setup_main_area(self):
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+
+        self.entry_busca = ctk.CTkEntry(self.main_frame, placeholder_text="🔍 Pesquisar produto por nome...")
+        self.entry_busca.pack(fill="x", padx=10, pady=(10, 0))
+        self.entry_busca.bind("<KeyRelease>", self.filtrar_lista)
         
         self.scrollable_frame = ctk.CTkScrollableFrame(self.main_frame, label_text="Produtos Cadastrados")
         self.scrollable_frame.pack(expand=True, fill="both", padx=10, pady=10)
@@ -68,8 +72,21 @@ class AppUI(ctk.CTk):
         texto = f"ID: {item[0]} | {item[1]} | Qtd: {item[2]} | R$ {item[3]:.2f}"
         ctk.CTkLabel(frame, text=texto).pack(side="left", padx=10)
         
-        ctk.CTkButton(frame, text="Excluir", width=60, fg_color="#e74c3c", 
-                      command=lambda i=item[0]: self.deletar(i)).pack(side="right", padx=5)
+        ctk.CTkButton(frame, text="Excluir", width=60, fg_color="#e74c3c", command=lambda i=item[0]: self.deletar(i)).pack(side="right", padx=5)
+        
+    def filtrar_lista(self, event=None):
+        termo = self.entry_busca.get()
+        
+        # Limpa a lista atual
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
+        # Busca os itens filtrados no banco
+        itens_filtrados = self.db.buscar_produtos(termo)
+        
+        # Reconstrói a lista apenas com os resultados
+        for item in itens_filtrados:
+            self.criar_linha_item(item)
 
     def deletar(self, id_item):
         self.db.deletar(id_item)
